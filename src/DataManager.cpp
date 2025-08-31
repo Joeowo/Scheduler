@@ -1,6 +1,7 @@
 #include "DataManager.h"
 #include <algorithm>
 #include <sstream>
+#include <windows.h>
 
 DataManager::DataManager() {
     loadFromFile();
@@ -11,61 +12,65 @@ DataManager::~DataManager() {
 }
 
 void DataManager::saveToFile() {
-    std::wofstream file(DATA_FILE);
+    std::ofstream file(DATA_FILE);
     if (!file.is_open()) return;
     
-    file << L"{\n";
+    file << "{\n";
     
     // Save tasks
-    file << L"  \"tasks\": [\n";
+    file << "  \"tasks\": [\n";
     for (size_t i = 0; i < tasks.size(); ++i) {
         const auto& task = tasks[i];
-        file << L"    {\n";
-        file << L"      \"id\": " << task.id << L",\n";
-        file << L"      \"name\": \"" << task.name << L"\",\n";
+        file << "    {\n";
+        file << "      \"id\": " << task.id << ",\n";
+        // Convert wide string to UTF-8
+        int utf8Length = WideCharToMultiByte(CP_UTF8, 0, task.name.c_str(), -1, nullptr, 0, nullptr, nullptr);
+        std::string nameStr(utf8Length - 1, 0);  // -1 to exclude null terminator
+        WideCharToMultiByte(CP_UTF8, 0, task.name.c_str(), -1, &nameStr[0], utf8Length, nullptr, nullptr);
+        file << "      \"name\": \"" << nameStr << "\",\n";
         
         auto startTime = std::chrono::system_clock::to_time_t(task.startTime);
-        file << L"      \"startTime\": " << startTime << L",\n";
+        file << "      \"startTime\": " << startTime << ",\n";
         
         auto endTime = std::chrono::system_clock::to_time_t(task.endTime);
-        file << L"      \"endTime\": " << endTime << L",\n";
+        file << "      \"endTime\": " << endTime << ",\n";
         
-        file << L"      \"status\": " << static_cast<int>(task.status) << L"\n";
-        file << L"    " << (i == tasks.size() - 1 ? L"}" : L"},") << L"\n";
+        file << "      \"status\": " << static_cast<int>(task.status) << "\n";
+        file << "    " << (i == tasks.size() - 1 ? "}" : "},") << "\n";
     }
-    file << L"  ],\n";
+    file << "  ],\n";
     
     // Save active log
-    file << L"  \"activeLog\": [";
+    file << "  \"activeLog\": [";
     for (size_t i = 0; i < activeLog.size(); ++i) {
         file << activeLog[i];
-        if (i < activeLog.size() - 1) file << L",";
+        if (i < activeLog.size() - 1) file << ",";
     }
-    file << L"],\n";
+    file << "],\n";
     
     // Save inactive log
-    file << L"  \"inactiveLog\": [\n";
+    file << "  \"inactiveLog\": [\n";
     for (size_t i = 0; i < inactiveLog.size(); ++i) {
         const auto& entry = inactiveLog[i];
-        file << L"    {\n";
-        file << L"      \"taskId\": " << entry.taskId << L",\n";
-        file << L"      \"status\": " << static_cast<int>(entry.status) << L",\n";
-        file << L"      \"changeTime\": " << std::chrono::system_clock::to_time_t(entry.changeTime) << L"\n";
-        file << L"    " << (i == inactiveLog.size() - 1 ? L"}" : L"},") << L"\n";
+        file << "    {\n";
+        file << "      \"taskId\": " << entry.taskId << ",\n";
+        file << "      \"status\": " << static_cast<int>(entry.status) << ",\n";
+        file << "      \"changeTime\": " << std::chrono::system_clock::to_time_t(entry.changeTime) << "\n";
+        file << "    " << (i == inactiveLog.size() - 1 ? "}" : "},") << "\n";
     }
-    file << L"  ],\n";
+    file << "  ],\n";
     
     // Save user settings
-    file << L"  \"userSettings\": {\n";
-    file << L"    \"nextTaskId\": " << nextTaskId << L",\n";
-    file << L"    \"mainMode\": " << userSettings.mainMode << L",\n";
-    file << L"    \"activeTaskMode\": " << userSettings.activeTaskMode << L",\n";
-    file << L"    \"historyMode\": " << userSettings.historyMode << L",\n";
-    file << L"    \"windowColor\": " << userSettings.windowColor << L",\n";
-    file << L"    \"textColor\": " << userSettings.textColor << L"\n";
-    file << L"  }\n";
+    file << "  \"userSettings\": {\n";
+    file << "    \"nextTaskId\": " << nextTaskId << ",\n";
+    file << "    \"mainMode\": " << userSettings.mainMode << ",\n";
+    file << "    \"activeTaskMode\": " << userSettings.activeTaskMode << ",\n";
+    file << "    \"historyMode\": " << userSettings.historyMode << ",\n";
+    file << "    \"windowColor\": " << userSettings.windowColor << ",\n";
+    file << "    \"textColor\": " << userSettings.textColor << "\n";
+    file << "  }\n";
     
-    file << L"}\n";
+    file << "}\n";
 }
 
 std::wstring parseStringValue(const std::wstring& line, const std::wstring& key) {
@@ -99,11 +104,42 @@ int parseIntValue(const std::wstring& line, const std::wstring& key) {
     }
 }
 
+std::string parseStringValue(const std::string& line, const std::string& key) {
+    std::string search = key + "\"";
+    size_t start = line.find(search);
+    if (start == std::string::npos) return "";
+    
+    start += search.length();
+    size_t end = line.find("\"", start);
+    if (end == std::string::npos) return "";
+    
+    return line.substr(start, end - start);
+}
+
+int parseIntValue(const std::string& line, const std::string& key) {
+    std::string search = key;
+    size_t start = line.find(search);
+    if (start == std::string::npos) return 0;
+    
+    start += search.length();
+    size_t end = line.find_first_of(",", start);
+    if (end == std::string::npos) end = line.length();
+    
+    std::string value = line.substr(start, end - start);
+    value.erase(0, value.find_first_not_of(" \t"));
+    
+    try {
+        return std::stoi(value);
+    } catch (...) {
+        return 0;
+    }
+}
+
 void DataManager::loadFromFile() {
-    std::wifstream file(DATA_FILE);
+    std::ifstream file(DATA_FILE);
     if (!file.is_open()) return;
     
-    std::wstring line;
+    std::string line;
     bool inTasks = false;
     bool inTask = false;
     bool inActiveLog = false;
@@ -114,25 +150,25 @@ void DataManager::loadFromFile() {
     LogEntry currentEntry(0, TaskStatus::ACTIVE, std::chrono::system_clock::now());
     
     while (std::getline(file, line)) {
-        line.erase(0, line.find_first_not_of(L" \t"));
+        line.erase(0, line.find_first_not_of(" \t"));
         
-        if (line.find(L"\"tasks\":") != std::wstring::npos) {
+        if (line.find("\"tasks\":") != std::string::npos) {
             inTasks = true;
             inTask = false;
             inActiveLog = false;
             inInactiveLog = false;
             inSettings = false;
-        } else if (line.find(L"\"activeLog\":") != std::wstring::npos) {
+        } else if (line.find("\"activeLog\":") != std::string::npos) {
             inTasks = false;
             inActiveLog = true;
             inInactiveLog = false;
             inSettings = false;
-        } else if (line.find(L"\"inactiveLog\":") != std::wstring::npos) {
+        } else if (line.find("\"inactiveLog\":") != std::string::npos) {
             inTasks = false;
             inActiveLog = false;
             inInactiveLog = true;
             inSettings = false;
-        } else if (line.find(L"\"userSettings\":") != std::wstring::npos) {
+        } else if (line.find("\"userSettings\":") != std::string::npos) {
             inTasks = false;
             inActiveLog = false;
             inInactiveLog = false;
@@ -140,31 +176,36 @@ void DataManager::loadFromFile() {
         }
         
         if (inTasks) {
-            if (line.find(L"{") != std::wstring::npos && line.find(L"\"id\":") != std::wstring::npos) {
+            if (line.find("{") != std::string::npos && line.find("\"id\":") != std::string::npos) {
                 inTask = true;
                 currentTask = Task(L"", std::chrono::system_clock::now(), std::chrono::system_clock::now());
             } else if (inTask) {
-                if (line.find(L"\"id\":") != std::wstring::npos) {
-                    currentTask.id = parseIntValue(line, L"\"id\": ");
-                } else if (line.find(L"\"name\":") != std::wstring::npos) {
-                    currentTask.name = parseStringValue(line, L"\"name\": \"");
-                } else if (line.find(L"\"startTime\":") != std::wstring::npos) {
-                    auto time = parseIntValue(line, L"\"startTime\": ");
+                if (line.find("\"id\":") != std::string::npos) {
+                    currentTask.id = parseIntValue(line, "\"id\": ");
+                } else if (line.find("\"name\":") != std::string::npos) {
+                    std::string nameStr = parseStringValue(line, "\"name\": \"");
+                    // Convert UTF-8 to wide string
+                    int wideLength = MultiByteToWideChar(CP_UTF8, 0, nameStr.c_str(), -1, nullptr, 0);
+                    std::wstring wideStr(wideLength - 1, 0);  // -1 to exclude null terminator
+                    MultiByteToWideChar(CP_UTF8, 0, nameStr.c_str(), -1, &wideStr[0], wideLength);
+                    currentTask.name = wideStr;
+                } else if (line.find("\"startTime\":") != std::string::npos) {
+                    auto time = parseIntValue(line, "\"startTime\": ");
                     currentTask.startTime = std::chrono::system_clock::from_time_t(time);
-                } else if (line.find(L"\"endTime\":") != std::wstring::npos) {
-                    auto time = parseIntValue(line, L"\"endTime\": ");
+                } else if (line.find("\"endTime\":") != std::string::npos) {
+                    auto time = parseIntValue(line, "\"endTime\": ");
                     currentTask.endTime = std::chrono::system_clock::from_time_t(time);
-                } else if (line.find(L"\"status\":") != std::wstring::npos) {
-                    currentTask.status = static_cast<TaskStatus>(parseIntValue(line, L"\"status\": "));
-                } else if (line.find(L"}") != std::wstring::npos) {
+                } else if (line.find("\"status\":") != std::string::npos) {
+                    currentTask.status = static_cast<TaskStatus>(parseIntValue(line, "\"status\": "));
+                } else if (line.find("}") != std::string::npos) {
                     tasks.push_back(currentTask);
                     nextTaskId = (std::max)(nextTaskId, currentTask.id + 1);
                     inTask = false;
                 }
             }
         } else if (inActiveLog) {
-            std::wregex number_regex(LR"(\d+)");
-            std::wsmatch match;
+            std::regex number_regex(R"(\d+)");
+            std::smatch match;
             if (std::regex_search(line, match, number_regex)) {
                 try {
                     int id = std::stoi(match.str());
@@ -172,18 +213,33 @@ void DataManager::loadFromFile() {
                 } catch (...) {}
             }
         } else if (inInactiveLog) {
-            // Parse inactive log entries similarly
+            if (line.find("{") != std::string::npos && line.find("\"taskId\":") != std::string::npos) {
+                inTask = true;
+                currentEntry = LogEntry(0, TaskStatus::ACTIVE, std::chrono::system_clock::now());
+            } else if (inTask) {
+                if (line.find("\"taskId\":") != std::string::npos) {
+                    currentEntry.taskId = parseIntValue(line, "\"taskId\": ");
+                } else if (line.find("\"status\":") != std::string::npos) {
+                    currentEntry.status = static_cast<TaskStatus>(parseIntValue(line, "\"status\": "));
+                } else if (line.find("\"changeTime\":") != std::string::npos) {
+                    auto time = parseIntValue(line, "\"changeTime\": ");
+                    currentEntry.changeTime = std::chrono::system_clock::from_time_t(time);
+                } else if (line.find("}") != std::string::npos) {
+                    inactiveLog.push_back(currentEntry);
+                    inTask = false;
+                }
+            }
         } else if (inSettings) {
-            if (line.find(L"\"mainMode\":") != std::wstring::npos) {
-                userSettings.mainMode = parseIntValue(line, L"\"mainMode\": ");
-            } else if (line.find(L"\"activeTaskMode\":") != std::wstring::npos) {
-                userSettings.activeTaskMode = parseIntValue(line, L"\"activeTaskMode\": ");
-            } else if (line.find(L"\"historyMode\":") != std::wstring::npos) {
-                userSettings.historyMode = parseIntValue(line, L"\"historyMode\": ");
-            } else if (line.find(L"\"windowColor\":") != std::wstring::npos) {
-                userSettings.windowColor = parseIntValue(line, L"\"windowColor\": ");
-            } else if (line.find(L"\"textColor\":") != std::wstring::npos) {
-                userSettings.textColor = parseIntValue(line, L"\"textColor\": ");
+            if (line.find("\"mainMode\":") != std::string::npos) {
+                userSettings.mainMode = parseIntValue(line, "\"mainMode\": ");
+            } else if (line.find("\"activeTaskMode\":") != std::string::npos) {
+                userSettings.activeTaskMode = parseIntValue(line, "\"activeTaskMode\": ");
+            } else if (line.find("\"historyMode\":") != std::string::npos) {
+                userSettings.historyMode = parseIntValue(line, "\"historyMode\": ");
+            } else if (line.find("\"windowColor\":") != std::string::npos) {
+                userSettings.windowColor = parseIntValue(line, "\"windowColor\": ");
+            } else if (line.find("\"textColor\":") != std::string::npos) {
+                userSettings.textColor = parseIntValue(line, "\"textColor\": ");
             }
         }
     }

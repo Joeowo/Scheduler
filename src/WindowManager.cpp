@@ -216,6 +216,8 @@ LRESULT CALLBACK WindowManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
             instance->handleRButtonDown(wParam, lParam);
             break;
         case WM_DESTROY:
+            // 在窗口销毁前保存数据
+            instance->dataManager.saveUserSettings();
             PostQuitMessage(0);
             break;
         default:

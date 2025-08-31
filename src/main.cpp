@@ -9,13 +9,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     InitCommonControlsEx(&icex);
     
     // Create and run the application
-    WindowManager windowManager;
-    if (!windowManager.createWindow()) {
+    WindowManager* windowManager = new WindowManager();
+    if (!windowManager->createWindow()) {
         MessageBox(nullptr, L"Failed to create window", L"Error", MB_OK);
+        delete windowManager;
         return 1;
     }
     
-    windowManager.runMessageLoop();
+    windowManager->runMessageLoop();
+    
+    // 确保数据保存
+    delete windowManager;
     
     return 0;
 }

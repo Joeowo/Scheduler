@@ -8,7 +8,8 @@
       "Bash(grep:*)",
       "Bash(Scheduler.exe)",
       "Bash(cmd:*)",
-      "Bash(Scheduler_optimized.exe)"
+      "Bash(Scheduler_optimized.exe)",
+      "Bash(build.bat)"
     ],
     "deny": [],
     "ask": []
