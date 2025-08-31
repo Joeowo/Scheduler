@@ -28,7 +28,6 @@ private:
     HWND btnPageNumbers;
     HWND btnSettings;
     HWND btnPin;
-    HWND btnDrag;
     HWND btnClose;
     
     // Drag state
