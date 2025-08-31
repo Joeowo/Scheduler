@@ -29,6 +29,7 @@ private:
     HWND btnSettings;
     HWND btnPin;
     HWND btnDrag;
+    HWND btnClose;
     
     // Drag state
     bool isDragging;

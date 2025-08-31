@@ -99,10 +99,15 @@ void WindowManager::createControls() {
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
         WINDOW_WIDTH - 50, 5, 25, 25, hwnd, (HMENU)14, GetModuleHandle(nullptr), nullptr);
     
-    // Drag handle
+    // Drag handle (now moved to close button position)
     btnDrag = CreateWindow(L"BUTTON", L"☐",
         WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        WINDOW_WIDTH - 80, 5, 25, 25, hwnd, (HMENU)15, GetModuleHandle(nullptr), nullptr);
+        WINDOW_WIDTH - 110, 5, 25, 25, hwnd, (HMENU)15, GetModuleHandle(nullptr), nullptr);
+    
+    // Close button
+    btnClose = CreateWindow(L"BUTTON", L"✕",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+        WINDOW_WIDTH - 35, 5, 25, 25, hwnd, (HMENU)16, GetModuleHandle(nullptr), nullptr);
     
     // Pagination buttons
     btnPrevPage = CreateWindow(L"BUTTON", L"上一页",
@@ -153,6 +158,7 @@ void WindowManager::createControls() {
     SendMessage(btnCreateTask, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(btnPin, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(btnDrag, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(btnClose, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(btnPrevPage, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(btnNextPage, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(btnPageNumbers, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -336,6 +342,9 @@ void WindowManager::handleCommand(WPARAM wParam, LPARAM lParam) {
         case 14: // Pin/Unpin
             handlePinToggle();
             break;
+        case 16: // Close button
+            PostQuitMessage(0);
+            break;
     }
 }
 
@@ -428,8 +437,14 @@ void WindowManager::handleLButtonDown(WPARAM wParam, LPARAM lParam) {
     int x = LOWORD(lParam);
     int y = HIWORD(lParam);
     
-    // Check if click is on drag handle
-    RECT dragRect = {WINDOW_WIDTH - 80, 5, WINDOW_WIDTH - 55, 30};
+    // Check if click is in the top title bar area (for dragging)
+    if (y <= 35 && x < WINDOW_WIDTH - 35) {  // Top 35 pixels, excluding close button area
+        handleMouseDown(wParam, lParam);
+        return;
+    }
+    
+    // Check if click is on drag handle (legacy support)
+    RECT dragRect = {WINDOW_WIDTH - 110, 5, WINDOW_WIDTH - 85, 30};
     if (x >= dragRect.left && x <= dragRect.right &&
         y >= dragRect.top && y <= dragRect.bottom) {
         handleMouseDown(wParam, lParam);
@@ -678,9 +693,9 @@ void WindowManager::handleMouseMove(WPARAM wParam, LPARAM lParam) {
         int x = LOWORD(lParam);
         int y = HIWORD(lParam);
         
-        // Check if mouse is over drag handle
-        RECT dragRect = {WINDOW_WIDTH - 80, 5, WINDOW_WIDTH - 55, 30};
-        if (x >= dragRect.left && x <= dragRect.right && y >= dragRect.top && y <= dragRect.bottom) {
+        // Check if mouse is in top title bar area or drag handle
+        if ((y <= 35 && x < WINDOW_WIDTH - 35) || 
+            (x >= WINDOW_WIDTH - 110 && x <= WINDOW_WIDTH - 85 && y >= 5 && y <= 30)) {
             SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
         }
     }
