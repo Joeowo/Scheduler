@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\":*)",
+      "Bash(cl:*)",
+      "Bash(build_fixed.bat)",
+      "Bash(powershell:*)",
+      "Bash(grep:*)",
+      "Bash(Scheduler.exe)",
+      "Bash(cmd:*)",
+      "Bash(Scheduler_optimized.exe)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
