@@ -3,6 +3,24 @@
 #include <commctrl.h>
 #include <shellapi.h>
 
+// 字符串转换工具函数
+std::wstring utf8ToWide(const std::string& utf8Str) {
+    if (utf8Str.empty()) return L"";
+    
+    int wideLength = MultiByteToWideChar(CP_UTF8, 0, utf8Str.c_str(), -1, nullptr, 0);
+    if (wideLength <= 0) return L"";
+    
+    std::wstring wideStr(wideLength, 0);
+    MultiByteToWideChar(CP_UTF8, 0, utf8Str.c_str(), -1, &wideStr[0], wideLength);
+    
+    // 移除空字符
+    if (!wideStr.empty() && wideStr.back() == '\0') {
+        wideStr.pop_back();
+    }
+    
+    return wideStr;
+}
+
 WindowManager* WindowManager::instance = nullptr;
 
 WindowManager::WindowManager() {
@@ -296,20 +314,34 @@ void WindowManager::handleCommand(WPARAM wParam, LPARAM lParam) {
             break;
         case 12: // Confirm
             if (isCreatingTask || isEditingTask) {
-                wchar_t name[256], startTime[64], endTime[64];
-                GetWindowText(hwndTaskName, name, 256);
+                wchar_t nameWide[256], startTime[64], endTime[64];
+                GetWindowText(hwndTaskName, nameWide, 256);
                 GetWindowText(hwndStartTime, startTime, 64);
                 GetWindowText(hwndEndTime, endTime, 64);
                 
-                if (wcslen(name) > 0) {
+                if (wcslen(nameWide) > 0) {
                     try {
+                        // 将宽字符串转换为UTF-8
+                        int nameLen = WideCharToMultiByte(CP_UTF8, 0, nameWide, -1, nullptr, 0, nullptr, nullptr);
+                        std::string nameStr(nameLen - 1, 0);
+                        WideCharToMultiByte(CP_UTF8, 0, nameWide, -1, &nameStr[0], nameLen, nullptr, nullptr);
+                        
+                        // 将宽字符串时间转换为UTF-8
+                        int startLen = WideCharToMultiByte(CP_UTF8, 0, startTime, -1, nullptr, 0, nullptr, nullptr);
+                        std::string startTimeStr(startLen - 1, 0);
+                        WideCharToMultiByte(CP_UTF8, 0, startTime, -1, &startTimeStr[0], startLen, nullptr, nullptr);
+                        
+                        int endLen = WideCharToMultiByte(CP_UTF8, 0, endTime, -1, nullptr, 0, nullptr, nullptr);
+                        std::string endTimeStr(endLen - 1, 0);
+                        WideCharToMultiByte(CP_UTF8, 0, endTime, -1, &endTimeStr[0], endLen, nullptr, nullptr);
+                        
                         auto start = Task::parseDateTime(startTime);
                         auto end = Task::parseDateTime(endTime);
                         
                         if (isCreatingTask) {
-                            dataManager.createTask(name, start, end);
+                            dataManager.createTask(nameStr, start, end);
                         } else {
-                            dataManager.updateTask(editingTaskId, name, start, end);
+                            dataManager.updateTask(editingTaskId, nameStr, start, end);
                         }
                         
                         // Update user settings
@@ -397,7 +429,8 @@ void WindowManager::drawTaskRow(HDC hdc, const Task& task, int yPos) {
     
     // Task name
     RECT nameRect = {MARGIN, yPos, WINDOW_WIDTH - MARGIN, yPos + 20};
-    DrawText(hdc, task.name.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER);
+    std::wstring nameWide = utf8ToWide(task.name);
+    DrawText(hdc, nameWide.c_str(), -1, &nameRect, DT_LEFT | DT_VCENTER);
     
     // Start/end time
     std::wstring timeText = Task::formatDateTime(task.startTime) + L" - " + Task::formatDateTime(task.endTime);
@@ -528,7 +561,7 @@ void WindowManager::showTaskContextMenu(int taskId, int x, int y) {
                 isCreatingTask = false;
                 editingTaskId = taskId;
                 
-                SetWindowText(hwndTaskName, task.name.c_str());
+                SetWindowText(hwndTaskName, utf8ToWide(task.name).c_str());
                 SetWindowText(hwndStartTime, Task::formatDateTime(task.startTime).c_str());
                 SetWindowText(hwndEndTime, Task::formatDateTime(task.endTime).c_str());
                 

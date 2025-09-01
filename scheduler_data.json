@@ -1,14 +1,26 @@
 {
   "tasks": [
+    {
+      "id": 1,
+      "name": "测试数据",
+      "startTime": 1756684860,
+      "endTime": 1756771260,
+      "status": 2
+    }
   ],
-  "activeLog": [2],
+  "activeLog": [],
   "inactiveLog": [
+    {
+      "taskId": 1,
+      "status": 2,
+      "changeTime": 1756684979
+    }
   ],
   "userSettings": {
-    "nextTaskId": 1,
-    "mainMode": 0,
-    "activeTaskMode": 1,
-    "historyMode": 1,
+    "nextTaskId": 2,
+    "mainMode": 1,
+    "activeTaskMode": 0,
+    "historyMode": 0,
     "windowColor": 16777215,
     "textColor": 0
   }

@@ -23,11 +23,8 @@ void DataManager::saveToFile() {
         const auto& task = tasks[i];
         file << "    {\n";
         file << "      \"id\": " << task.id << ",\n";
-        // Convert wide string to UTF-8
-        int utf8Length = WideCharToMultiByte(CP_UTF8, 0, task.name.c_str(), -1, nullptr, 0, nullptr, nullptr);
-        std::string nameStr(utf8Length - 1, 0);  // -1 to exclude null terminator
-        WideCharToMultiByte(CP_UTF8, 0, task.name.c_str(), -1, &nameStr[0], utf8Length, nullptr, nullptr);
-        file << "      \"name\": \"" << nameStr << "\",\n";
+        // 直接使用UTF-8字符串，无需转换
+        file << "      \"name\": \"" << task.name << "\",\n";
         
         auto startTime = std::chrono::system_clock::to_time_t(task.startTime);
         file << "      \"startTime\": " << startTime << ",\n";
@@ -110,10 +107,35 @@ std::string parseStringValue(const std::string& line, const std::string& key) {
     if (start == std::string::npos) return "";
     
     start += search.length();
-    size_t end = line.find("\"", start);
-    if (end == std::string::npos) return "";
     
-    return line.substr(start, end - start);
+    // 处理转义字符
+    std::string result;
+    bool escaped = false;
+    for (size_t i = start; i < line.length(); ++i) {
+        char c = line[i];
+        if (!escaped && c == '\\') {
+            escaped = true;
+        } else if (!escaped && c == '"') {
+            // 结束引号
+            break;
+        } else if (escaped) {
+            switch (c) {
+                case '\\': result += '\\'; break;
+                case '"': result += '"'; break;
+                case 'n': result += '\n'; break;
+                case 't': result += '\t'; break;
+                case 'r': result += '\r'; break;
+                case 'b': result += '\b'; break;
+                case 'f': result += '\f'; break;
+                default: result += c; break;
+            }
+            escaped = false;
+        } else {
+            result += c;
+        }
+    }
+    
+    return result;
 }
 
 int parseIntValue(const std::string& line, const std::string& key) {
@@ -146,7 +168,7 @@ void DataManager::loadFromFile() {
     bool inInactiveLog = false;
     bool inSettings = false;
     
-    Task currentTask(L"", std::chrono::system_clock::now(), std::chrono::system_clock::now());
+    Task currentTask("", std::chrono::system_clock::now(), std::chrono::system_clock::now());
     LogEntry currentEntry(0, TaskStatus::ACTIVE, std::chrono::system_clock::now());
     
     while (std::getline(file, line)) {
@@ -178,17 +200,13 @@ void DataManager::loadFromFile() {
         if (inTasks) {
             if (line.find("{") != std::string::npos && line.find("\"id\":") != std::string::npos) {
                 inTask = true;
-                currentTask = Task(L"", std::chrono::system_clock::now(), std::chrono::system_clock::now());
+                currentTask = Task("", std::chrono::system_clock::now(), std::chrono::system_clock::now());
             } else if (inTask) {
                 if (line.find("\"id\":") != std::string::npos) {
                     currentTask.id = parseIntValue(line, "\"id\": ");
                 } else if (line.find("\"name\":") != std::string::npos) {
                     std::string nameStr = parseStringValue(line, "\"name\": \"");
-                    // Convert UTF-8 to wide string
-                    int wideLength = MultiByteToWideChar(CP_UTF8, 0, nameStr.c_str(), -1, nullptr, 0);
-                    std::wstring wideStr(wideLength - 1, 0);  // -1 to exclude null terminator
-                    MultiByteToWideChar(CP_UTF8, 0, nameStr.c_str(), -1, &wideStr[0], wideLength);
-                    currentTask.name = wideStr;
+                    currentTask.name = nameStr;
                 } else if (line.find("\"startTime\":") != std::string::npos) {
                     auto time = parseIntValue(line, "\"startTime\": ");
                     currentTask.startTime = std::chrono::system_clock::from_time_t(time);
@@ -245,7 +263,7 @@ void DataManager::loadFromFile() {
     }
 }
 
-int DataManager::createTask(const std::wstring& name, 
+int DataManager::createTask(const std::string& name, 
                            const std::chrono::system_clock::time_point& start,
                            const std::chrono::system_clock::time_point& end) {
     Task task(name, start, end, nextTaskId++);
@@ -254,7 +272,7 @@ int DataManager::createTask(const std::wstring& name,
     return task.id;
 }
 
-bool DataManager::updateTask(int taskId, const std::wstring& name,
+bool DataManager::updateTask(int taskId, const std::string& name,
                             const std::chrono::system_clock::time_point& start,
                             const std::chrono::system_clock::time_point& end) {
     for (auto& task : tasks) {

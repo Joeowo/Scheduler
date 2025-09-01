@@ -24,10 +24,10 @@ public:
     ~DataManager();
 
     // Task management
-    int createTask(const std::wstring& name, 
+    int createTask(const std::string& name, 
                    const std::chrono::system_clock::time_point& start,
                    const std::chrono::system_clock::time_point& end);
-    bool updateTask(int taskId, const std::wstring& name,
+    bool updateTask(int taskId, const std::string& name,
                     const std::chrono::system_clock::time_point& start,
                     const std::chrono::system_clock::time_point& end);
     bool deleteTask(int taskId);

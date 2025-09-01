@@ -15,10 +15,10 @@ struct Task {
     int id;
     std::chrono::system_clock::time_point startTime;
     std::chrono::system_clock::time_point endTime;
-    std::wstring name;
+    std::string name;
     TaskStatus status;
 
-    Task(const std::wstring& taskName, 
+    Task(const std::string& taskName, 
          const std::chrono::system_clock::time_point& start,
          const std::chrono::system_clock::time_point& end,
          int taskId = -1)
@@ -26,6 +26,7 @@ struct Task {
           name(taskName), status(TaskStatus::ACTIVE) {}
 
     static std::wstring formatDateTime(const std::chrono::system_clock::time_point& time);
+    static std::chrono::system_clock::time_point parseDateTime(const std::string& dateStr);
     static std::chrono::system_clock::time_point parseDateTime(const std::wstring& dateStr);
 };
 
