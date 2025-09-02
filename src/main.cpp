@@ -3,6 +3,9 @@
 #include <commctrl.h>
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
+    // 设置控制台代码页为UTF-8
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
     // Initialize common controls
     INITCOMMONCONTROLSEX icex = { sizeof(INITCOMMONCONTROLSEX) };
     icex.dwICC = ICC_WIN95_CLASSES;

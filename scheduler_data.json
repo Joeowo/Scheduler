@@ -2,26 +2,71 @@
   "tasks": [
     {
       "id": 1,
-      "name": "测试数据",
-      "startTime": 1756684860,
-      "endTime": 1756771260,
+      "name": "测试1",
+      "startTime": 1756778820,
+      "endTime": 1756865220,
+      "status": 1
+    },
+    {
+      "id": 2,
+      "name": "测试2",
+      "startTime": 1756778820,
+      "endTime": 1756865220,
+      "status": 1
+    },
+    {
+      "id": 3,
+      "name": "测试3",
+      "startTime": 1756694220,
+      "endTime": 1756867020,
+      "status": 1
+    },
+    {
+      "id": 4,
+      "name": "完成任务测试",
+      "startTime": 1756780620,
+      "endTime": 1756867020,
       "status": 2
+    },
+    {
+      "id": 5,
+      "name": "终止任务测试",
+      "startTime": 1756780620,
+      "endTime": 1756867020,
+      "status": 3
+    },
+    {
+      "id": 6,
+      "name": "测试保存功能",
+      "startTime": 1756782180,
+      "endTime": 1756868580,
+      "status": 3
     }
   ],
-  "activeLog": [],
+  "activeLog": [1,2,3],
   "inactiveLog": [
     {
-      "taskId": 1,
+      "taskId": 4,
       "status": 2,
-      "changeTime": 1756684979
+      "changeTime": 1756780782
+    },
+    {
+      "taskId": 5,
+      "status": 3,
+      "changeTime": 1756780791
+    },
+    {
+      "taskId": 6,
+      "status": 3,
+      "changeTime": 1756782219
     }
   ],
   "userSettings": {
-    "nextTaskId": 2,
+    "nextTaskId": 7,
     "mainMode": 1,
-    "activeTaskMode": 0,
-    "historyMode": 0,
-    "windowColor": 16777215,
+    "activeTaskMode": 1,
+    "historyMode": 1,
+    "windowColor": 8454016,
     "textColor": 0
   }
 }
