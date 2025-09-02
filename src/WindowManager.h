@@ -43,7 +43,7 @@ private:
     HWND hwndCancel;
 
     // Constants
-    static constexpr int WINDOW_WIDTH = 300;
+    static constexpr int WINDOW_WIDTH = 350;
     static constexpr int WINDOW_HEIGHT = 450;
     static constexpr int TASK_HEIGHT = 60;
     static constexpr int MARGIN = 5;
