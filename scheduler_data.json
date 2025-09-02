@@ -43,7 +43,7 @@
       "status": 3
     }
   ],
-  "activeLog": [1,2,3],
+  "activeLog": [3,1,2],
   "inactiveLog": [
     {
       "taskId": 4,
@@ -64,7 +64,7 @@
   "userSettings": {
     "nextTaskId": 7,
     "mainMode": 0,
-    "activeTaskMode": 0,
+    "activeTaskMode": 1,
     "historyMode": 0,
     "windowColor": 8454016,
     "textColor": 0

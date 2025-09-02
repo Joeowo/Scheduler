@@ -737,8 +737,14 @@ void WindowManager::handleMouseMove(WPARAM wParam, LPARAM lParam) {
         int y = HIWORD(lParam);
         
         // Check if mouse is in top title bar area
-        if (y <= 35 && x < WINDOW_WIDTH - 35) {  // Top 35 pixels, excluding close button area
+        bool isInTopArea = (y <= 35 && x < WINDOW_WIDTH - 35);  // Top 35 pixels, excluding close button area
+        
+        if (isInTopArea) {
+            // 鼠标在顶部区域，显示移动光标
             SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
+        } else {
+            // 鼠标离开顶部区域，恢复默认光标
+            SetCursor(LoadCursor(nullptr, IDC_ARROW));
         }
     }
 }
