@@ -425,7 +425,7 @@ void WindowManager::drawTasks(HDC hdc) {
     bool isActiveMode = settings.mainMode == 0;
     
     std::vector<Task> tasks = dataManager.getTasksByPage(
-        currentPage, 10, isActiveMode, 
+        currentPage, 5, isActiveMode, 
         isActiveMode ? (settings.activeTaskMode == 0) : true
     );
     
@@ -500,7 +500,7 @@ void WindowManager::handleLButtonDown(WPARAM wParam, LPARAM lParam) {
     
     if (isActiveMode) {
         std::vector<Task> tasks = dataManager.getTasksByPage(
-            currentPage, 10, true, settings.activeTaskMode == 0
+            currentPage, 5, true, settings.activeTaskMode == 0
         );
         
         int yStart = 100;
@@ -540,7 +540,7 @@ void WindowManager::handleRButtonDown(WPARAM wParam, LPARAM lParam) {
     bool isActiveMode = settings.mainMode == 0;
     
     std::vector<Task> tasks = dataManager.getTasksByPage(
-        currentPage, 10, isActiveMode, isActiveMode ? (settings.activeTaskMode == 0) : true
+        currentPage, 5, isActiveMode, isActiveMode ? (settings.activeTaskMode == 0) : true
     );
     
     int yStart = 100;
@@ -654,7 +654,7 @@ int WindowManager::getTotalPages() {
         }
     }
     
-    return (tasks.size() + 9) / 10; // Ceiling division
+    return (tasks.size() + 4) / 5; // Ceiling division
 }
 
 void WindowManager::refreshDisplay() {
@@ -737,8 +737,14 @@ void WindowManager::handleMouseMove(WPARAM wParam, LPARAM lParam) {
         int y = HIWORD(lParam);
         
         // Check if mouse is in top title bar area
-        if (y <= 35 && x < WINDOW_WIDTH - 35) {  // Top 35 pixels, excluding close button area
+        bool isInTopArea = (y <= 35 && x < WINDOW_WIDTH - 35);  // Top 35 pixels, excluding close button area
+        
+        if (isInTopArea) {
+            // 鼠标在顶部区域，显示移动光标
             SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
+        } else {
+            // 鼠标离开顶部区域，恢复默认光标
+            SetCursor(LoadCursor(nullptr, IDC_ARROW));
         }
     }
 }

@@ -3,6 +3,9 @@
 #include <commctrl.h>
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
+    // 启用DPI感知，提高高分辨率显示器上的字体清晰度
+    SetProcessDPIAware();
+
     // 设置控制台代码页为UTF-8
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
