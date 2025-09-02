@@ -53,7 +53,7 @@ bool WindowManager::createWindow() {
         CLASS_NAME,
         L"Scheduler",
         WS_POPUP | WS_BORDER,
-        CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT,
+        GetSystemMetrics(SM_CXSCREEN) - WINDOW_WIDTH, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
         nullptr, nullptr, hInstance, nullptr
     );
     
@@ -67,11 +67,33 @@ bool WindowManager::createWindow() {
     isDragging = false;
     isPinned = false;
     
-    // Create font
-    hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                       DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                       DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
-    
+    // 优化后的代码
+    hFont = CreateFont(
+        18,                    // 增加字体高度到18像素
+        0,                     // 字体宽度（0表示自动）
+        0,                     // 文本角度
+        0,                     // 基线角度
+        FW_NORMAL,             // 字体粗细
+        FALSE,                 // 斜体
+        FALSE,                 // 下划线
+        FALSE,                 // 删除线
+        DEFAULT_CHARSET,       // 字符集
+        OUT_TT_PRECIS,         // 使用TrueType字体输出精度（提高质量）
+        CLIP_DEFAULT_PRECIS,   // 裁剪精度
+        CLEARTYPE_QUALITY,     // 使用ClearType渲染（提高清晰度）
+        DEFAULT_PITCH | FF_DONTCARE, // 字体间距和族
+        L"Microsoft YaHei UI"  // 使用微软雅黑UI字体（中文显示更好）
+    );
+
+    // 更健壮的字体创建
+    if (!hFont) {
+        hFont = CreateFont(
+            18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft YaHei UI"
+        );
+    }
+
     createControls();
     
     ShowWindow(hwnd, SW_SHOW);

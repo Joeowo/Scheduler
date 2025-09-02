@@ -1,0 +1,171 @@
+# Scheduler - 任务调度器
+
+一个简洁的Windows桌面任务管理应用程序，支持任务创建、编辑、状态管理和历史记录查看。
+
+## 构建要求
+
+- Windows 10/11
+- Visual Studio 2019 或更高版本
+- C++17 支持
+
+## 构建步骤
+
+1. 克隆项目到本地
+2. 使用Visual Studio打开 `Scheduler.vcxproj`
+3. 选择Release配置
+4. 点击"生成解决方案"或按F7
+
+或者使用命令行构建：
+```bash
+# 使用MSBuild
+msbuild Scheduler.vcxproj /p:Configuration=Release
+
+# 或使用build.bat脚本
+build.bat
+```
+
+## 运行方式
+
+### 方法1：直接运行
+双击 `Scheduler.exe` 文件
+
+### 方法2：命令行运行
+```bash
+Scheduler.exe
+```
+
+## 使用说明
+
+### 基本操作
+- **创建任务**：点击"创建任务"按钮，填写任务名称和时间
+- **编辑任务**：右键点击任务，选择"编辑"
+- **完成任务**：点击任务右侧的"完成"按钮
+- **终止任务**：点击任务右侧的"终止"按钮
+
+### 界面导航
+- **活跃任务**：查看和管理当前活跃的任务
+- **历史记录**：查看已完成或终止的任务
+- **EARLY/DDL模式**：切换任务显示模式
+- **分页浏览**：使用"上一页"/"下一页"按钮
+
+### 窗口控制
+- **移动窗口**：拖拽窗口顶部区域
+- **置顶窗口**：点击📌按钮
+- **关闭程序**：点击✕按钮或按Alt+F4
+
+### 设置
+- **颜色设置**：点击"设置"按钮自定义窗口颜色
+- **数据保存**：程序会自动保存所有设置和任务数据
+
+## 文件结构
+
+```
+Scheduler/
+├── src/                    # 源代码目录
+│   ├── main.cpp           # 程序入口
+│   ├── WindowManager.h    # 窗口管理类
+│   ├── WindowManager.cpp  # 窗口管理实现
+│   ├── DataManager.h      # 数据管理类
+│   ├── DataManager.cpp    # 数据管理实现
+│   ├── Task.h            # 任务类定义
+│   └── Task.cpp          # 任务类实现
+├── Scheduler.exe          # 可执行文件
+├── scheduler_data.json    # 数据存储文件
+└── README.md             # 说明文档
+```
+
+## 数据存储
+
+程序使用JSON格式存储数据，包括：
+- 用户设置（窗口颜色、显示模式等）
+- 任务信息（名称、时间、状态等）
+- 历史记录
+
+数据文件位置：`scheduler_data.json`
+
+## 注意事项
+
+- 程序启动时会自动定位到屏幕右上角
+- 支持拖拽移动窗口位置
+- 所有数据自动保存，无需手动操作
+- 支持UTF-8编码的任务名称
+
+## 技术实现
+
+- 使用Win32 API构建原生Windows应用
+- 采用面向对象设计模式
+- 支持透明窗口和分层显示
+- 实现自定义窗口过程和消息处理
+
+## 许可证
+
+本项目仅供学习和个人使用。
+
+## 📝 字体优化代码修改
+
+在 `src/WindowManager.cpp` 文件的第70行附近，将原来的字体创建代码：
+
+```cpp
+// 原来的代码
+hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                   DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, L"Segoe UI");
+```
+
+替换为：
+
+```cpp
+<code_block_to_apply_changes_from>
+```
+
+##  主要优化点
+
+### 1. **字体质量提升**
+- `OUT_TT_PRECIS`：使用TrueType字体输出精度
+- `CLEARTYPE_QUALITY`：启用ClearType字体渲染技术
+
+### 2. **字体大小调整**
+- 从16像素增加到18像素，提高可读性
+
+### 3. **字体选择优化**
+- 使用 `Microsoft YaHei UI`：微软雅黑UI字体，中文显示效果更好
+- 支持ClearType渲染
+
+### 4. **备用字体方案**
+如果微软雅黑不可用，可以添加备用字体：
+
+```cpp
+// 更健壮的字体创建
+hFont = CreateFont(
+    18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+    CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Microsoft YaHei UI"
+);
+
+// 如果创建失败，使用备用字体
+if (!hFont) {
+    hFont = CreateFont(
+        18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, L"Segoe UI"
+    );
+}
+```
+
+## 🔧 额外优化建议
+
+### 1. **DPI感知支持**
+在 `main.cpp` 中添加DPI感知支持：
+
+```cpp
+// 在WinMain函数开始处添加
+SetProcessDPIAware(); // 启用DPI感知
+```
+
+### 2. **字体缓存优化**
+在 `WindowManager` 类中添加字体缓存机制，避免重复创建字体。
+
+### 3. **高DPI缩放支持**
+考虑添加对不同DPI缩放级别的支持。
+
+这些优化应该能显著提高字体的清晰度和可读性，特别是在高分辨率显示器上。

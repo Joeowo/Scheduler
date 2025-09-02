@@ -63,9 +63,9 @@
   ],
   "userSettings": {
     "nextTaskId": 7,
-    "mainMode": 1,
-    "activeTaskMode": 1,
-    "historyMode": 1,
+    "mainMode": 0,
+    "activeTaskMode": 0,
+    "historyMode": 0,
     "windowColor": 8454016,
     "textColor": 0
   }
